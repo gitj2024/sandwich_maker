@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三明治单词游戏 - 完成页面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #2e2e2e;
+            color: white;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            /* overflow: hidden; */ /* 移除，允许滚动 */
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #ffc107;
+            border-radius: 50%;
+            animation: confetti-fall 4s ease-in-out infinite;
+        }
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+        .sandwich-display {
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            overflow: hidden;
+            position: relative;
+            background-color: #3c3c3c;
+            border: 5px solid #ffc107;
+            box-shadow: 0 5px 30px rgba(255, 193, 7, 0.3);
+            animation: sandwich-bounce 1s ease-in-out;
+            margin-top: 80px;
+        }
+        @keyframes sandwich-bounce {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .good-job {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ffc107;
+            text-shadow: 0 0 10px rgba(255, 193, 7, 0.5);
+            animation: text-glow 2s ease-in-out infinite;
+        }
+        @keyframes text-glow {
+            0% { opacity: 0.7; transform: scale(0.95); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 0.7; transform: scale(0.95); }
+        }
+        .restart-button {
+            transition: all 0.3s ease;
+        }
+        .restart-button:hover {
+            transform: scale(1.05);
+        }
+        .words-list-container {
+            max-height: 200px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ffc107 #333;
+        }
+        .words-list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .words-list-container::-webkit-scrollbar-track {
+            background: #333;
+            border-radius: 8px;
+        }
+        .words-list-container::-webkit-scrollbar-thumb {
+            background-color: #ffc107;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center relative py-10">
+    <!-- 顶部导航 -->
+    <div class="absolute top-0 left-0 right-0 flex justify-between items-center px-6 py-4">
+        <a href="making.html" class="text-yellow-400">
+            <i class="fas fa-arrow-left text-xl"></i>
+        </a>
+    </div>
+
+    <!-- 庆祝动画 -->
+    <div id="confetti-container"></div>
+    
+    <!-- 主要内容 -->
+    <div class="flex flex-col items-center justify-center w-full max-w-md px-4">
+        <div class="sandwich-display mb-8">
+            <img id="sandwich-img" src="" class="w-full h-full object-cover" alt="完成的三明治">
+        </div>
+        
+        <h1 class="good-job my-6" id="completion-title">Good job!</h1>
+        
+        <p class="text-xl text-gray-300 text-center mb-4" id="completion-message">
+            你成功完成了美味三明治！
+        </p>
+        
+        <div class="bg-gray-800 p-4 rounded-lg w-full max-w-xs mb-6">
+            <p class="text-yellow-400 font-bold mb-2">学会了这些单词：</p>
+            <div class="words-list-container">
+                <div id="learned-words-list" class="text-white">
+                    <!-- 这里将动态显示学会的单词及数量 -->
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex space-x-4">
+            <a href="home.html" class="restart-button bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold py-3 px-6 rounded-full text-lg shadow-lg flex items-center">
+                <i class="fas fa-redo-alt mr-2"></i>
+                再试一次
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // 获取完成信息
+        const completionMessage = localStorage.getItem('completionMessage') || 'good job';
+        
+        // 更新标题文本
+        document.getElementById('completion-title').textContent = completionMessage.charAt(0).toUpperCase() + completionMessage.slice(1);
+        
+        // 随机选择三明治图片
+        function selectRandomSandwichImage() {
+            // 获取完成三明治图目录下的所有图片
+            const sandwichImages = [
+                'sandwich01.jpg', 'sandwich02.jpg', 'sandwich03.jpg', 'sandwich04.jpg', 
+                'sandwich05.jpg', 'sandwich06.jpg', 'sandwich07.jpg', 'sandwich08.jpg', 'sandwich09.jpg'
+            ];
+            
+            // 随机选择一张图片
+            const randomIndex = Math.floor(Math.random() * sandwichImages.length);
+            const selectedImage = sandwichImages[randomIndex];
+            
+            // 设置图片路径
+            document.getElementById('sandwich-img').src = `resource/完成三明治图/${selectedImage}`;
+        }
+        
+        // 播放音效
+        function playSound() {
+            const audio = new Audio(`resource/提示音频/完成提示/${completionMessage}.mp3`);
+            audio.play();
+        }
+        
+        // 创建礼花效果
+        function createConfetti() {
+            const confettiContainer = document.getElementById('confetti-container');
+            const colors = ['#FFC107', '#FF5722', '#4CAF50', '#2196F3', '#9C27B0'];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.animationDelay = Math.random() * 4 + 's';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                // 随机大小
+                const size = Math.random() * 10 + 5;
+                confetti.style.width = size + 'px';
+                confetti.style.height = size + 'px';
+                
+                confettiContainer.appendChild(confetti);
+            }
+        }
+        
+        // 显示用户添加的原料
+        function displayLearnedWords() {
+            // 从localStorage获取已添加的原料
+            const addedIngredientsJSON = localStorage.getItem('addedIngredients');
+            const ingredientCountsJSON = localStorage.getItem('ingredientCounts');
+            
+            if (addedIngredientsJSON && ingredientCountsJSON) {
+                const ingredientCounts = JSON.parse(ingredientCountsJSON);
+                const learnedWordsList = document.getElementById('learned-words-list');
+                
+                // 获取添加过的原料名称（去重）
+                const uniqueIngredients = [...new Set(JSON.parse(addedIngredientsJSON))];
+                
+                if (uniqueIngredients.length > 0) {
+                    // 为每个原料创建一个展示项
+                    uniqueIngredients.forEach(ingredient => {
+                        const count = ingredientCounts[ingredient];
+                        
+                        // 创建原料项
+                        const wordItem = document.createElement('div');
+                        wordItem.className = 'flex items-center mb-2 bg-gray-700 p-2 rounded';
+                        
+                        // 添加原料图标
+                        const iconDiv = document.createElement('div');
+                        iconDiv.className = 'w-8 h-8 rounded-full overflow-hidden mr-3 border border-yellow-400';
+                        const iconImg = document.createElement('img');
+                        iconImg.src = `resource/原料图/${ingredient}.jpg`;
+                        iconImg.alt = ingredient;
+                        iconImg.className = 'w-full h-full object-cover';
+                        iconDiv.appendChild(iconImg);
+                        
+                        // 添加原料名称
+                        const nameSpan = document.createElement('span');
+                        nameSpan.className = 'flex-grow';
+                        nameSpan.textContent = ingredient;
+                        
+                        // 添加计数
+                        const countSpan = document.createElement('span');
+                        countSpan.className = 'bg-yellow-500 text-gray-900 px-2 py-1 rounded text-xs font-bold';
+                        countSpan.textContent = `×${count}`;
+                        
+                        // 组装原料项
+                        wordItem.appendChild(iconDiv);
+                        wordItem.appendChild(nameSpan);
+                        wordItem.appendChild(countSpan);
+                        
+                        // 添加到列表
+                        learnedWordsList.appendChild(wordItem);
+                    });
+                } else {
+                    learnedWordsList.textContent = '没有添加任何原料';
+                }
+            } else {
+                document.getElementById('learned-words-list').textContent = '没有添加任何原料';
+            }
+        }
+        
+        // 页面加载时触发特效
+        window.addEventListener('load', function() {
+            selectRandomSandwichImage();
+            createConfetti();
+            playSound();
+            displayLearnedWords();
+        });
+    </script>
+</body>
+</html> 

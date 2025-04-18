@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三明治单词游戏 - 制作页面</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #2e2e2e;
+            color: white;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+        }
+        .ingredient-circle {
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .ingredient-circle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 193, 7, 0.6);
+        }
+        .ingredient-scroll {
+            overflow-x: auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* Internet Explorer 10+ */
+            display: flex;
+            padding: 1rem 0;
+            width: 100%;
+            -webkit-overflow-scrolling: touch; /* 增加iOS滑动支持 */
+        }
+        .ingredient-scroll::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera*/
+        }
+        .sandwich-display {
+            width: 300px;
+            height: 350px;
+            border-radius: 16px;
+            position: relative;
+            background-color: #3c3c3c;
+            border: 3px solid #ffc107;
+            padding: 12px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #ffc107 #333;
+        }
+        .sandwich-display::-webkit-scrollbar {
+            width: 8px;
+        }
+        .sandwich-display::-webkit-scrollbar-track {
+            background: #333;
+            border-radius: 8px;
+        }
+        .sandwich-display::-webkit-scrollbar-thumb {
+            background-color: #ffc107;
+            border-radius: 8px;
+        }
+        .ingredient-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+        .ingredient-item:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        .ingredient-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #ffc107;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        .ingredient-info {
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .count-badge {
+            background-color: #ffc107;
+            color: #333;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: auto;
+        }
+        .current-ingredient {
+            background-color: rgba(255, 193, 7, 0.2);
+            border-left: 4px solid #ffc107;
+        }
+        .word-input-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .letter-container {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+        .letter {
+            width: 30px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            position: relative;
+        }
+        .letter::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #ffc107;
+        }
+        .letter-input {
+            width: 30px;
+            height: 40px;
+            border: none;
+            border-bottom: 2px solid #ffc107;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            outline: none;
+            caret-color: #ffc107;
+        }
+        .letter-input:focus {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-bottom: 2px solid #ffdd57;
+        }
+        .letter-input.correct {
+            color: #4CAF50;
+            background-color: rgba(76, 175, 80, 0.1);
+            border-bottom: 2px solid #4CAF50;
+        }
+        .mini-confetti {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: mini-confetti-fall 2s ease-in-out;
+            pointer-events: none;
+        }
+        @keyframes mini-confetti-fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(150px) rotate(720deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+    <!-- 顶部导航 -->
+    <div class="flex justify-between items-center px-6 py-4 border-b border-gray-700">
+        <a href="home.html" class="text-yellow-400">
+            <i class="fas fa-arrow-left text-xl"></i>
+        </a>
+        <h1 class="text-2xl font-bold text-yellow-400">制作三明治</h1>
+        <a href="#" id="complete-button" class="bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-full text-sm">
+            完成
+        </a>
+    </div>
+
+    <!-- 主要内容区域 -->
+    <div class="flex-1 flex flex-col items-center justify-between p-6">
+        <!-- 三明治展示区域 -->
+        <div class="flex flex-col items-center justify-center">
+            <div class="sandwich-display mb-4" id="sandwich-display">
+                <!-- 这里将显示已选择的原料列表 -->
+                <div class="text-center mb-3 text-yellow-400 font-bold">已选择的原料</div>
+                <div id="ingredients-list">
+                    <!-- 原料项将在这里动态添加 -->
+                </div>
+            </div>
+            <div class="ingredient-info text-center">
+                <!-- 这里将显示单词拼写游戏 -->
+                <div id="word-game-container" class="word-input-container hidden">
+                    <p id="word-prompt" class="text-lg text-yellow-400">请输入你选择原料的所缺部分字母！</p>
+                    <div id="word-input" class="letter-container">
+                        <!-- 字母输入区域将在这里动态添加 -->
+                    </div>
+                </div>
+                <p id="ingredient-name" class="text-xl font-light text-yellow-500"></p>
+                <p id="to-add" class="text-lg font-thin text-gray-400"></p>
+            </div>
+            
+            <p class="mt-4 text-center text-gray-300">选择你想要添加的原料</p>
+        </div>
+
+        <!-- 原料选择区域 -->
+        <div class="w-full mt-6">
+            <div class="ingredient-scroll flex space-x-4 py-4 px-2 w-full overflow-x-auto">
+                <div class="ingredient-circle border-2 border-yellow-600 flex-shrink-0 bg-gray-800 flex items-center justify-center" data-name="tomato">
+                    <img src="resource/原料图/tomato.jpg" alt="番茄" class="w-full h-full object-cover">
+                </div>
+                <div class="ingredient-circle border-2 border-yellow-600 flex-shrink-0 bg-gray-800 flex items-center justify-center" data-name="cucumber">
+                    <img src="resource/原料图/cucumber.jpg" alt="黄瓜" class="w-full h-full object-cover">
+                </div>
+                <div class="ingredient-circle border-2 border-yellow-600 flex-shrink-0 bg-gray-800 flex items-center justify-center" data-name="lunchmeat">
+                    <img src="resource/原料图/lunchmeat.jpg" alt="午餐肉" class="w-full h-full object-cover">
+                </div>
+                <div class="ingredient-circle border-2 border-yellow-600 flex-shrink-0 bg-gray-800 flex items-center justify-center" data-name="egg">
+                    <img src="resource/原料图/egg.jpg" alt="鸡蛋" class="w-full h-full object-cover">
+                </div>
+                <div class="ingredient-circle border-2 border-yellow-600 flex-shrink-0 bg-gray-800 flex items-center justify-center" data-name="bread">
+                    <img src="resource/原料图/bread.jpg" alt="面包" class="w-full h-full object-cover">
+                </div>
+                <div class="ingredient-circle border-2 border-yellow-600 flex-shrink-0 bg-gray-800 flex items-center justify-center" data-name="carrot">
+                    <img src="resource/原料图/carrot.jpg" alt="胡萝卜" class="w-full h-full object-cover">
+                </div>
+                <div class="ingredient-circle border-2 border-yellow-600 flex-shrink-0 bg-gray-800 flex items-center justify-center" data-name="chicken">
+                    <img src="resource/原料图/chicken.jpg" alt="鸡肉" class="w-full h-full object-cover">
+                </div>
+                <!-- 可以根据需要添加更多原料 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 保存已添加的原料及其数量
+        const ingredientCounts = {};
+        const addedIngredients = [];
+        let currentIngredient = null;
+        let wordGameInProgress = false;
+        
+        // 创建提示框元素
+        const toastContainer = document.createElement('div');
+        toastContainer.className = 'fixed top-16 left-0 right-0 flex justify-center z-50 transition-opacity duration-500 opacity-0 pointer-events-none';
+        toastContainer.innerHTML = `
+            <div class="bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <span id="toast-message">提示信息</span>
+            </div>
+        `;
+        document.body.appendChild(toastContainer);
+        
+        // 显示提示框函数
+        function showToast(message, duration = 3000, type = 'error') {
+            const toastMessage = document.getElementById('toast-message');
+            toastMessage.textContent = message;
+            
+            // 根据类型设置不同背景色
+            const toastBox = toastContainer.querySelector('div');
+            if (type === 'error') {
+                toastBox.className = 'bg-red-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center';
+            } else if (type === 'success') {
+                toastBox.className = 'bg-green-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center';
+            } else if (type === 'info') {
+                toastBox.className = 'bg-blue-500 text-white px-4 py-3 rounded-lg shadow-lg flex items-center';
+            }
+            
+            toastContainer.classList.remove('opacity-0');
+            toastContainer.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                toastContainer.classList.remove('opacity-100');
+                toastContainer.classList.add('opacity-0');
+            }, duration);
+        }
+        
+        // 创建礼花效果
+        function createMiniConfetti(element) {
+            const rect = element.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const colors = ['#FFC107', '#FF5722', '#4CAF50', '#2196F3', '#9C27B0'];
+            
+            for (let i = 0; i < 30; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'mini-confetti';
+                confetti.style.left = centerX + 'px';
+                confetti.style.top = centerY + 'px';
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                // 随机方向
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * 100 + 50;
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance;
+                confetti.style.transform = `translate(${x}px, ${y}px)`;
+                
+                // 随机延迟
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                
+                // 随机大小
+                const size = Math.random() * 8 + 4;
+                confetti.style.width = size + 'px';
+                confetti.style.height = size + 'px';
+                
+                document.body.appendChild(confetti);
+                
+                // 移除礼花元素
+                setTimeout(() => {
+                    confetti.remove();
+                }, 2000);
+            }
+        }
+        
+        // 播放随机完成提示音效
+        function playRandomCompletionSound() {
+            const completionMessages = ['perfect', 'amazing', 'wonderful', 'good job'];
+            const randomMessage = completionMessages[Math.floor(Math.random() * completionMessages.length)];
+            const audio = new Audio(`resource/提示音频/完成提示/${randomMessage}.mp3`);
+            audio.play();
+        }
+        
+        // 生成字母拼写游戏
+        function generateWordGame(word) {
+            // 隐藏原来的显示内容
+            document.getElementById('ingredient-name').textContent = '';
+            document.getElementById('to-add').textContent = '';
+            
+            // 显示单词游戏容器
+            const wordGameContainer = document.getElementById('word-game-container');
+            wordGameContainer.classList.remove('hidden');
+            
+            // 清空输入区域
+            const wordInput = document.getElementById('word-input');
+            wordInput.innerHTML = '';
+            
+            // 保存当前原料名称
+            currentIngredient = word;
+            
+            // 创建字母区域
+            const letters = word.split('');
+            const wordLength = letters.length;
+            
+            // 根据单词长度决定要显示多少个字母
+            let showCount;
+            if (wordLength <= 5) {
+                // 单词长度小于等于5时，显示2到(长度-1)个字母
+                showCount = Math.floor(Math.random() * (wordLength - 2)) + 2;
+            } else {
+                // 单词长度大于5时，显示3到(长度-1)个字母
+                showCount = Math.floor(Math.random() * (wordLength - 3)) + 3;
+            }
+            
+            // 要隐藏的字母数量
+            const hideCount = wordLength - showCount;
+            
+            // 随机选择要隐藏的字母位置
+            const hideIndices = [];
+            while (hideIndices.length < hideCount) {
+                const idx = Math.floor(Math.random() * letters.length);
+                if (!hideIndices.includes(idx)) {
+                    hideIndices.push(idx);
+                }
+            }
+            
+            // 创建字母元素
+            letters.forEach((letter, index) => {
+                if (hideIndices.includes(index)) {
+                    // 创建输入框
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.maxLength = 1;
+                    input.className = 'letter-input';
+                    input.dataset.index = index;
+                    input.dataset.letter = letter.toLowerCase();
+                    
+                    // 输入事件处理
+                    input.addEventListener('input', function(e) {
+                        this.value = this.value.toLowerCase();
+                        
+                        // 自动移动到下一个输入框
+                        if (this.value) {
+                            const allInputs = document.querySelectorAll('.letter-input');
+                            const currentIndex = Array.from(allInputs).indexOf(this);
+                            
+                            if (currentIndex < allInputs.length - 1) {
+                                // 移动到下一个输入框
+                                allInputs[currentIndex + 1].focus();
+                            } else {
+                                // 如果是最后一个输入框，让其失去焦点（隐藏光标）
+                                this.blur();
+                            }
+                            
+                            // 检查单词是否完成
+                            checkWordCompletion();
+                        }
+                    });
+                    
+                    // 按键事件处理
+                    input.addEventListener('keydown', function(e) {
+                        if (e.key === 'Backspace' && !this.value) {
+                            // 当Backspace且输入框为空时，移动到上一个输入框
+                            const allInputs = document.querySelectorAll('.letter-input');
+                            const currentIndex = Array.from(allInputs).indexOf(this);
+                            
+                            if (currentIndex > 0) {
+                                allInputs[currentIndex - 1].focus();
+                                allInputs[currentIndex - 1].value = '';
+                            }
+                        }
+                    });
+                    
+                    wordInput.appendChild(input);
+                } else {
+                    // 创建显示字母
+                    const letterSpan = document.createElement('div');
+                    letterSpan.className = 'letter';
+                    letterSpan.textContent = letter;
+                    wordInput.appendChild(letterSpan);
+                }
+            });
+            
+            // 聚焦第一个输入框
+            const firstInput = wordInput.querySelector('input');
+            if (firstInput) {
+                setTimeout(() => {
+                    firstInput.focus();
+                }, 100);
+            }
+            
+            // 显示提示信息
+            showToast('请输入你选择原料的所缺部分字母！', 3000, 'info');
+        }
+        
+        // 检查单词是否拼写完成
+        function checkWordCompletion() {
+            const inputs = document.querySelectorAll('.letter-input');
+            let isComplete = true;
+            let isCorrect = true;
+            let hasCorrect = false;
+            
+            // 检查所有输入框
+            inputs.forEach(input => {
+                if (!input.value) {
+                    isComplete = false;
+                } else if (input.value.toLowerCase() !== input.dataset.letter) {
+                    isCorrect = false;
+                } else {
+                    // 标记正确的字母
+                    input.classList.add('correct');
+                    hasCorrect = true;
+                }
+            });
+            
+            // 如果所有字母都已输入
+            if (isComplete) {
+                if (isCorrect) {
+                    // 答案正确
+                    playRandomCompletionSound();
+                    createMiniConfetti(document.getElementById('word-input'));
+                    showToast('拼写正确！', 2000, 'success');
+                    
+                    // 等待一段时间后继续添加原料
+                    setTimeout(() => {
+                        completeWordGame();
+                    }, 1500);
+                } else {
+                    // 答案错误
+                    showToast('拼写有误，请重新尝试！', 2000, 'error');
+                    
+                    // 只清除不正确的字母
+                    inputs.forEach(input => {
+                        if (input.value.toLowerCase() !== input.dataset.letter) {
+                            input.value = '';
+                        }
+                    });
+                    
+                    // 聚焦第一个空输入框
+                    const firstEmptyInput = Array.from(inputs).find(input => !input.value);
+                    if (firstEmptyInput) {
+                        firstEmptyInput.focus();
+                    }
+                }
+            }
+            
+            return { isComplete, isCorrect, hasCorrect };
+        }
+        
+        // 完成单词游戏，继续添加原料
+        function completeWordGame() {
+            // 隐藏单词游戏
+            document.getElementById('word-game-container').classList.add('hidden');
+            
+            // 只显示原料名称
+            document.getElementById('ingredient-name').textContent = currentIngredient;
+            document.getElementById('to-add').textContent = ''; // 清空 'to add' 文本
+            
+            // 添加到原料列表中
+            addToIngredientsList(currentIngredient);
+            
+            // 记录已添加的原料
+            addedIngredients.push(currentIngredient);
+            
+            // 重置当前原料和游戏状态
+            currentIngredient = null;
+            wordGameInProgress = false;
+        }
+        
+        // 为每个原料绑定点击事件
+        document.querySelectorAll('.ingredient-circle').forEach(ingredient => {
+            ingredient.addEventListener('click', function() {
+                const ingredientName = this.dataset.name;
+                
+                // 如果已有未完成的单词游戏，提示用户先完成
+                if (wordGameInProgress) {
+                    showToast('请先完成当前单词的拼写！', 2000, 'info');
+                    return;
+                }
+                
+                // 播放该原料的音频
+                const audio = new Audio(`resource/原料单词音频/${ingredientName}.mp3`);
+                audio.play();
+                
+                // 设置游戏状态为进行中
+                wordGameInProgress = true;
+                
+                // 生成字母拼写游戏
+                generateWordGame(ingredientName);
+            });
+        });
+        
+        // 添加到原料列表
+        function addToIngredientsList(ingredientName) {
+            const ingredientsList = document.getElementById('ingredients-list');
+            
+            // 更新或初始化该原料的计数
+            ingredientCounts[ingredientName] = (ingredientCounts[ingredientName] || 0) + 1;
+            
+            // 查找是否已存在该原料的项
+            let existingItem = document.getElementById(`ingredient-${ingredientName}`);
+            
+            // 移除所有项的当前高亮
+            document.querySelectorAll('.ingredient-item').forEach(item => {
+                item.classList.remove('current-ingredient');
+            });
+            
+            if (existingItem) {
+                // 更新计数
+                const countBadge = existingItem.querySelector('.count-badge');
+                countBadge.textContent = ingredientCounts[ingredientName];
+                
+                // 添加当前选中高亮
+                existingItem.classList.add('current-ingredient');
+                
+                // 移动到列表顶部
+                ingredientsList.insertBefore(existingItem, ingredientsList.firstChild);
+            } else {
+                // 创建新的原料项
+                const ingredientItem = document.createElement('div');
+                ingredientItem.id = `ingredient-${ingredientName}`;
+                ingredientItem.className = 'ingredient-item current-ingredient';
+                
+                // 添加原料图标
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'ingredient-icon';
+                const iconImg = document.createElement('img');
+                iconImg.src = `resource/原料图/${ingredientName}.jpg`;
+                iconImg.alt = ingredientName;
+                iconImg.className = 'w-full h-full object-cover';
+                iconDiv.appendChild(iconImg);
+                
+                // 添加原料名称
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'text-white';
+                nameSpan.textContent = ingredientName;
+                
+                // 添加计数徽章
+                const countBadge = document.createElement('span');
+                countBadge.className = 'count-badge';
+                countBadge.textContent = ingredientCounts[ingredientName];
+                
+                // 组装原料项
+                ingredientItem.appendChild(iconDiv);
+                ingredientItem.appendChild(nameSpan);
+                ingredientItem.appendChild(countBadge);
+                
+                // 添加到列表最前面
+                ingredientsList.insertBefore(ingredientItem, ingredientsList.firstChild);
+            }
+            
+            // 滚动到顶部
+            const sandwichDisplay = document.getElementById('sandwich-display');
+            sandwichDisplay.scrollTop = 0;
+        }
+        
+        // 检查面包数量函数
+        function checkBreadCount() {
+            const breadCount = ingredientCounts['bread'] || 0;
+            if (breadCount < 2) {
+                // 播放提示音频
+                const audio = new Audio('resource/提示音频/面包片至少2片.mp3');
+                audio.play();
+                
+                // 显示提示信息
+                showToast('制作三明治，面包片至少需要2片喔！', 3000);
+                return false;
+            }
+            return true;
+        }
+        
+        // 绑定完成按钮点击事件
+        document.getElementById('complete-button').addEventListener('click', function() {
+            // 检查是否有未完成的单词拼写游戏
+            if (wordGameInProgress) {
+                showToast('请先完成所选原料的单词拼写！', 3000, 'error');
+                
+                // 聚焦第一个空输入框
+                const firstEmptyInput = Array.from(document.querySelectorAll('.letter-input')).find(input => !input.value);
+                if (firstEmptyInput) {
+                    firstEmptyInput.focus();
+                }
+                return;
+            }
+            
+            // 检查面包数量是否足够
+            if (!checkBreadCount()) {
+                return; // 如果面包不够，停止后续操作
+            }
+            
+            // 将已添加的原料信息存储到localStorage
+            localStorage.setItem('addedIngredients', JSON.stringify(addedIngredients));
+            localStorage.setItem('ingredientCounts', JSON.stringify(ingredientCounts));
+            
+            // 获取完成提示目录下的所有音频文件名
+            const completionMessages = ['perfect', 'amazing', 'wonderful', 'good job'];
+            // 随机选择一个完成提示
+            const randomMessage = completionMessages[Math.floor(Math.random() * completionMessages.length)];
+            localStorage.setItem('completionMessage', randomMessage);
+            
+            // 跳转到完成页面
+            window.location.href = 'complete.html';
+        });
+    </script>
+</body>
+</html> 
